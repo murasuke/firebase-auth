@@ -15,7 +15,7 @@ React Router(V6) とFirebase Authenticationを組み合わせて、特定ペー�
       </RequireAuth>
     } />
 ```
-5. ログイン状態はフックで管理する(ReduxやContexを利用しない)
+5. ログイン状態はフックで管理する(ReduxやContexは不要。react-firebase-hooksを利用する)
   ```tsx
     const {isLoading, isSignedIn, email} = useAuthState();
   ```
@@ -24,7 +24,7 @@ React Router(V6) とFirebase Authenticationを組み合わせて、特定ペー�
 # 概要手順
 ## React, firebaseのインストール
 
-ログイン画面のUI用に`react-firebaseui`、認証用に`react-firebase-hooks`
+ログイン画面のUI用`react-firebaseui`、認証用`react-firebase-hooks`も一緒にインストールします
 
 ```bash
 npm i react-router-dom
@@ -33,11 +33,11 @@ npm i firebase react-firebaseui react-firebase-hooks
 
 ## Firebaseコンソールから、メール認証を有効化
 
-* 左側メニューから`Authentidation`を選択し、`始める`ボタンをクリック。
+* 左側メニューから`Authentidation`を選択し、`始める`ボタンをクリック
 
 ![auth010](./img/auth010.png)
 
-* ログイン方法の`メール/パスワード`をクリック。
+* ログイン方法の`メール/パスワード`をクリック
 
 ![auth020](./img/auth020.png)
 
@@ -58,7 +58,7 @@ npm i firebase react-firebaseui react-firebase-hooks
 |  LoginForm.tsx  | react-firebaseuiを利用したログインフォーム  |
 |  RequireAuth.tsx  |  認証が必要なページをラップすることで、認証を強制するコンポーネント  |
 |  App.tsx  |  ルート定義  |
-|  HomePage.tsx  |  トップページ。各画面へのリンクと、ログアウト機能。  |
+|  HomePage.tsx  |  トップページ。各画面へのリンクと、ログアウト機能  |
 |  LoginPage.tsx  |  ログインページ。ログイン後に表示するパスを引数で受け取る  |
 |  privatePage.tsx  |  表示にログインを必要とするページ  |
 |  PublicPage.tsx  |  表示にログインが不要なページ   |
@@ -68,7 +68,7 @@ npm i firebase react-firebaseui react-firebase-hooks
 
 トップページ(`HomePage.tsx`)
 
-`ログインが必要なページ`をクリックすると、ログインページに遷移します。
+`ログインが必要なページ`をクリックすると、ログインページに遷移します
 
 ![auth060](./img/auth060.png)
 
@@ -76,7 +76,7 @@ npm i firebase react-firebaseui react-firebase-hooks
 
 ![auth061](./img/auth061.png)
 
-ログイン後、自動で`ログインが必要なページ`へ遷移
+ログイン後、自動で`ログインが必要なページ`(`PirvatePage.tsx`)へ遷移
 
 ![auth062](./img/auth062.png)
 
@@ -87,20 +87,6 @@ npm i firebase react-firebaseui react-firebase-hooks
 
 # 実装方法
 
-## ルート定義：App.tsx
-
-認証が必要なページを`<RequireAuth>`で囲います。認証していない場合、ログイン画面に遷移します。
-(ReactRouterV6)
-```tsx
-<Routes>
-  <Route path="/" element={<HomePage />} />
-  <Route path="/public" element={<PublicPage />} />
-  <Route path="/private" element={<RequireAuth>
-                                    <PrivatePage />
-                                  </RequireAuth>} />
-  <Route path="/signin" element={<LoginPage moveTo="/" />} />
-</Routes>
-```
 
 ## Firebaseの初期化：/utils/init-firebase.ts
 
@@ -168,9 +154,9 @@ REACT_APP_APPID=1:99999999999:web:XXXXXXXXXXXXXXXXXXXXXX
 REACT_APP_AUTH_PERSISIT=1
 ```
 
-## 認証チェックコンポーネント：/components/RequireAuth.tsx
+## 認証チェックコンポーネント：components/RequireAuth.tsx
 
-認証情報を取得するフック(`RequireAuth`)を利用し、認証状態であれば子コンポーネントを、
+認証情報を取得するフック(`useAuthState`)を利用し、認証状態であれば子コンポーネントを、
 未認証状態であれば、ログインコンポーネントを返します。
 React Router(V6)用です。
 
@@ -192,6 +178,22 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
 
 export default RequireAuth;
 ```
+
+## ルート定義：App.tsx
+
+認証が必要なページを`<RequireAuth>`で囲います。認証していない場合、ログイン画面に遷移します。
+(ReactRouterV6)
+```tsx
+<Routes>
+  <Route path="/" element={<HomePage />} />
+  <Route path="/public" element={<PublicPage />} />
+  <Route path="/private" element={<RequireAuth>
+                                    <PrivatePage />
+                                  </RequireAuth>} />
+  <Route path="/signin" element={<LoginPage moveTo="/" />} />
+</Routes>
+```
+
 
 ## 認証情報取得フック：/hooks/useAuthState.ts
 
@@ -259,39 +261,41 @@ export const useAuthState = (): AuthState => {
 ```
 
 
-## useAuthSateフックの使い方サンプル：/pages/PrivatePage.tsx
+## useAuthSateフックの使い方サンプル：pages/PublicPage.tsx
+
+ログイン済みの判断には`isSignedIn`を利用します。
 
 ```tsx
 import { VFC } from 'react';
 import useAuthState from 'hooks/useAuthState';
 
 /**
- * 表示にログインを必要とするページ
+ * 表示にログインが不要なページ
  */
-const PrivatePage: VFC = () => {
-  const { isLoading, email } = useAuthState();
+const PublicPage: VFC = () => {
+  const { isLoading, isSignedIn, email } = useAuthState();
   if (isLoading) {
     return <p>Loadiing...</p>;
   }
 
   return (
     <>
-      <h2>ログインが必要なページ</h2>
-      <div>{email}</div>
+      <h2>ログイン不要ページ</h2>
+      <div>{isSignedIn ? `ログイン済み:${email}` : `未ログイン`}</div>
     </>
   );
 };
 
-export default PrivatePage;
+export default PublicPage;
 
 ```
 
-## LoginForm.tsx ：ログイン画面
+## ログイン画面：components/LoginForm.tsx
 
 ログインUI自体は、`react-firebaseuiコンポーネント`を利用して表示しています。
 ここでは、UIコンポーネントの利用に必要な認証プロバイダの設定を行います。
 
-* ログイン成功時のリダイレクト先を指定する`signInSuccessUrl`を使うと、ブラウザ側でアプリのリロードが発生してしまうため利用せず、自力でページ遷移を行います。
+* ログイン成功時のリダイレクト先を指定する`signInSuccessUrl`を使うと、ブラウザ側でアプリのリロードが発生してしまうため、自力でページ遷移を行います。
 
   `signInSuccessWithAuthResult`イベント発生時に、navigate()でページ遷移。
 
@@ -380,12 +384,14 @@ https://maku.blog/p/8t6gq2b/
 useAuthStateフックの仕組みを参考にしました。
 
 https://dev.classmethod.jp/articles/react-router-5to6/
-https://qiita.com/musatarosu/items/5411772d97f72d00d267
+ReactRouter(v6)の使い方
+
 https://qiita.com/cola119/items/99350f2c34c51378777e
+FirebaseUIの使い方
 
 https://stackoverflow.com/questions/69864165/error-privateroute-is-not-a-route-component-all-component-children-of-rou
 
-ReactRouterV5で利用していた`PrivateRoute`(ログイン時とログアウト時でページ遷移の許可をわける)がV6でできなくなったため、その対応策
+ReactRouterV5で利用していた`PrivateRoute`(ログイン時とログアウト時でページ遷移の許可をわける)がV6でできなくなったため、その対応策が記載されているページ
 ```
 function PrivateRoute({ element, path }) {
   const authed = isauth() // isauth() returns true or false based on localStorage
@@ -393,5 +399,5 @@ function PrivateRoute({ element, path }) {
   return <Route path={path} element={ele} />;
 }
 ```
-下記のエラーが発生する
+ReactRouterV6で&lt;PrivateRoute&gt;を利用すると下記のエラーが発生する。
 `Error: [PrivateRoute] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
