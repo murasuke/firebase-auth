@@ -1,7 +1,9 @@
-# React Router V6とFirebase 認証(react-firebaseui,react-firebase-hooks)の使い方
+# React Router(V6) で特定ページに認証をかける方法(react-firebaseui,react-firebase-hooks利用)
 
 React Router(V6) とFirebase Authenticationを組み合わせて、特定ページに認証をかけるサンプルです。
 react-firebase-hooksというカスタムフックを使うことで、ReduxやContextが不要になり簡単に実装ができるようになります。
+
+https://github.com/murasuke/firebase-auth
 
 ## 目的、機能
 
@@ -9,6 +11,7 @@ react-firebase-hooksというカスタムフックを使うことで、ReduxやC
 1. 認証をFirebaseで行う(メール認証)
 1. ログイン画面は`react-firebaseui`を利用する(楽をする)
 1. ログインが必要な画面をラップするコンポーネント`<RequireAuth>`を用意する(`<PrivateRoute>`代替。Routeをラップするコンポーネントは利用できなくなっています)
+
 ```jsx
   <Route path="/private" element={
       <RequireAuth>
@@ -17,6 +20,7 @@ react-firebase-hooksというカスタムフックを使うことで、ReduxやC
     } />
 ```
 5. ログイン状態はフックで管理する(ReduxやContexは不要。react-firebase-hooksを利用する)
+
   ```tsx
     const {isLoading, isSignedIn, email, userId} = useAuthState();
   ```
@@ -57,7 +61,7 @@ https://github.com/murasuke/firebase-auth
 |  .env  |  Firebaseの接続設定と、認証の永続化設定  |
 |  init-firebase.ts  |  FirebaseApp初期化ロジック  |
 |  index.tsx  |  init-firebaseを読み込み、初期化を実行  |
-|  useAuthState.ts  |  ユーザーのサインイン状態を取得するためのカスタムフック  |
+|  useAuthState.ts  |  ユーザーのログイン状態を取得するためのカスタムフック  |
 |  LoginForm.tsx  | react-firebaseuiを利用したログインフォーム  |
 |  RequireAuth.tsx  |  認証が必要なページをラップすることで、認証を強制するコンポーネント  |
 |  App.tsx  |  ルート定義  |
@@ -94,6 +98,9 @@ https://github.com/murasuke/firebase-auth
 ## Firebaseの初期化：utils/init-firebase.ts
 
 初期化に必要な情報を環境変数から読み込み、初期化を実行します。
+Firebaseのキーはアプリ側で保持するため、環境変数に入れる必要はありません。
+かと言ってもソースに直接記載すると誰でも利用できてしまうので。
+
 ```tsx
 import { initializeApp } from 'firebase/app';
 import { getAuth, browserSessionPersistence } from 'firebase/auth';
@@ -139,9 +146,6 @@ ReactDOM.render(
 
 環境変数設定(.env)
 
-Firebaseのキーはアプリ側で保持するため、環境変数に入れる必要はありません。
-かと言ってもソースに直接記載すると誰でも利用できてしまうので.envに設定しています。
-
 ```sh
 # Firebase 設定
 REACT_APP_APIKEY=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -186,6 +190,7 @@ export default RequireAuth;
 
 認証が必要なページを`<RequireAuth>`で囲います。認証していない場合、ログイン画面に遷移します。
 (ReactRouterV6)
+
 ```tsx
 <Routes>
   <Route path="/" element={<HomePage />} />
@@ -395,6 +400,7 @@ FirebaseUIの使い方
 https://stackoverflow.com/questions/69864165/error-privateroute-is-not-a-route-component-all-component-children-of-rou
 
 ReactRouterV5で利用していた`PrivateRoute`(ログイン時とログアウト時でページ遷移の許可をわける)がV6でできなくなったため、その対応策が記載されているページ
+
 ```
 function PrivateRoute({ element, path }) {
   const authed = isauth() // isauth() returns true or false based on localStorage
@@ -402,5 +408,9 @@ function PrivateRoute({ element, path }) {
   return <Route path={path} element={ele} />;
 }
 ```
-ReactRouterV6で&lt;PrivateRoute&gt;を利用すると下記のエラーが発生する。
-`Error: [PrivateRoute] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
+
+ReactRouterV6で&lt;PrivateRoute&gt;を利用すると下記のエラーが発生します
+
+```
+Error: [PrivateRoute] is not a <Route> component. All component children of <Routes> must be a <Route> or <React.Fragment>`
+```
