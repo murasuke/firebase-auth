@@ -1,15 +1,24 @@
+/**
+ * 認証情報取得フック
+ * react-firebase-hooks/authを使いやすくするためのラッパーフック。
+ * ・AuthState型のオブジェクトを返します(ログイン済みフラグ、ユーザ情報、ローディング中フラグ)
+ * ・ログイン状態は`react-firebase-hooks/auth`が管理しているため、ContextやReduxは不要
+ */
+
 import { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
+import { useAuthState as useAuthStateOriginal } from 'react-firebase-hooks/auth';
 
 /**
  * useAuthState フックの戻り値の型。
  */
 export type AuthState = {
-  isSignedIn: boolean;
-  isLoading: boolean;
-  userId: string | undefined;
-  userName: string | undefined;
-  email: string | undefined;
+  isSignedIn: boolean; // ログイン状態フラグ
+  isLoading: boolean; // 読み込み中フラグ
+  userId?: string;
+  userName?: string;
+  email?: string;
+  error?: Error;
 };
 
 /**
@@ -25,29 +34,27 @@ const INITIAL_AUTH_STATE: AuthState = {
 
 /**
  * ユーザーのサインイン状態を取得するためのカスタムフック。
+ * react-firebase-hooks/authをラップしている。
  */
-export const useAuthState = (): AuthState => {
+const useAuthState = (): AuthState => {
   const [authState, setAuthState] = useState(INITIAL_AUTH_STATE);
-
-  // サインイン状態の変化を監視する
+  const [user, loading, error] = useAuthStateOriginal(getAuth());
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getAuth(), (user) => {
-      if (user) {
-        setAuthState({
-          isSignedIn: true,
-          isLoading: false,
-          userId: user.uid,
-          userName: user.displayName || undefined,
-          email: user.email || undefined,
-        });
-      } else {
-        setAuthState({ ...INITIAL_AUTH_STATE, isLoading: false });
-      }
-    });
-
-    // ページ遷移時にサインイン状態の監視を解除
-    return () => unsubscribe();
-  }, []);
+    if (user) {
+      setAuthState({
+        isSignedIn: true,
+        isLoading: loading,
+        userId: user.uid,
+        userName: user.displayName || undefined,
+        email: user.email || undefined,
+        error,
+      });
+    } else {
+      setAuthState({ ...INITIAL_AUTH_STATE, isLoading: loading });
+    }
+  }, [user, loading, error]);
 
   return authState;
 };
+
+export default useAuthState;

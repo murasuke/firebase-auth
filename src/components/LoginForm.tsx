@@ -20,6 +20,7 @@ const uiConfig: auth.Config = {
     // GoogleAuthProvider.PROVIDER_ID,
     // TwitterAuthProvider.PROVIDER_ID,
   ],
+  // signInSuccessUrl:"", リダイレクト(reactアプリのリロード)が発生するため利用しない
 };
 
 /**

@@ -1,4 +1,4 @@
-import { useAuthState } from 'hooks/useAuthState';
+import useAuthState from 'hooks/useAuthState';
 import LoginPage from 'pages/LoginPage';
 
 /**

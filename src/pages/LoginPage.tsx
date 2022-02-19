@@ -1,5 +1,5 @@
 import { VFC } from 'react';
-import LoginForm from '../components/LoginForm';
+import LoginForm from 'components/LoginForm';
 
 /**
  * ログインページ

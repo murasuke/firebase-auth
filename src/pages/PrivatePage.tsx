@@ -1,15 +1,19 @@
 import { VFC } from 'react';
-import { useAuthState } from '../hooks/useAuthState';
+import useAuthState from 'hooks/useAuthState';
 
 /**
  * 表示にログインを必要とするページ
  */
 const PrivatePage: VFC = () => {
-  const authState = useAuthState();
+  const { isLoading, email } = useAuthState();
+  if (isLoading) {
+    return <p>Loadiing...</p>;
+  }
+
   return (
     <>
       <h2>ログインが必要なページ</h2>
-      <div>{authState.email}</div>
+      <div>{email}</div>
     </>
   );
 };
