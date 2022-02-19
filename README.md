@@ -1,11 +1,12 @@
 # React Router V6とFirebase 認証(react-firebaseui,react-firebase-hooks)の使い方
 
 React Router(V6) とFirebase Authenticationを組み合わせて、特定ページに認証をかけるサンプルです。
+react-firebase-hooksというカスタムフックを使うことで、ReduxやContextが不要になり簡単に実装ができるようになります。
 
 ## 目的、機能
 
-1. React Router V6で画面遷移
-1. 認証をFirebaseで行う
+1. React Router V6で画面遷移を行う
+1. 認証をFirebaseで行う(メール認証)
 1. ログイン画面は`react-firebaseui`を利用する(楽をする)
 1. ログインが必要な画面をラップするコンポーネント`<RequireAuth>`を用意する(`<PrivateRoute>`代替。Routeをラップするコンポーネントは利用できなくなっています)
 ```jsx
@@ -17,9 +18,9 @@ React Router(V6) とFirebase Authenticationを組み合わせて、特定ペー�
 ```
 5. ログイン状態はフックで管理する(ReduxやContexは不要。react-firebase-hooksを利用する)
   ```tsx
-    const {isLoading, isSignedIn, email} = useAuthState();
+    const {isLoading, isSignedIn, email, userId} = useAuthState();
   ```
-6. 設定で、画面を閉じた際、認証の(継続|継続しない)を切り替え可能とする
+6. 画面を閉じた際、認証の(継続|継続しない)を切り替え可能とする
 
 # 概要手順
 ## React, firebaseのインストール
@@ -46,6 +47,8 @@ npm i firebase react-firebaseui react-firebase-hooks
 ![auth030](./img/auth030.png)
 
 ## ファイル一覧と概要
+
+https://github.com/murasuke/firebase-auth
 
 ![auth050](./img/auth050.png)
 
@@ -88,7 +91,7 @@ npm i firebase react-firebaseui react-firebase-hooks
 # 実装方法
 
 
-## Firebaseの初期化：/utils/init-firebase.ts
+## Firebaseの初期化：utils/init-firebase.ts
 
 初期化に必要な情報を環境変数から読み込み、初期化を実行します。
 ```tsx
@@ -297,7 +300,7 @@ export default PublicPage;
 
 * ログイン成功時のリダイレクト先を指定する`signInSuccessUrl`を使うと、ブラウザ側でアプリのリロードが発生してしまうため、自力でページ遷移を行います。
 
-  `signInSuccessWithAuthResult`イベント発生時に、navigate()でページ遷移。
+  `signInSuccessWithAuthResult`(ログイン成功後)イベント発生時に、navigate()でページ遷移する
 
 
 ```tsx
